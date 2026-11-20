@@ -335,13 +335,13 @@ export default function HomePage() {
               if (currentUser.role === 'ADMIN') setCurrentView('admin-dashboard');
               else setCurrentView('home');
             }}
-            className="flex items-center gap-2 text-left group"
+            className="flex items-center gap-2.5 text-left group"
           >
-            <span className="grid h-9 w-9 place-items-center rounded bg-primary text-primary-foreground shadow-sm transition group-hover:scale-105">
-              <Trophy className="h-5 w-5" />
+            <span className="grid h-8 w-8 place-items-center rounded bg-primary text-primary-foreground shadow-sm transition group-hover:scale-105">
+              <Trophy className="h-4 w-4" />
             </span>
-            <span className="font-display text-xl tracking-wide">
-              Hostel FC <span className="text-primary">Arena</span>
+            <span className="font-display text-xl tracking-wider uppercase">
+              HOSTEL FC <span className="text-primary">ARENA</span>
             </span>
           </button>
 
@@ -352,11 +352,11 @@ export default function HomePage() {
               <button
                 onClick={() => setCurrentView('home')}
                 className={cn(
-                  'text-sm font-semibold uppercase tracking-wide transition-colors flex items-center gap-1.5',
+                  'text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5',
                   currentView === 'home' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
                 )}
               >
-                <HomeIcon className="w-4 h-4" /> Home
+                <HomeIcon className="w-3.5 h-3.5" /> Home
               </button>
             )}
 
@@ -365,11 +365,11 @@ export default function HomePage() {
               <button
                 onClick={() => setCurrentView('player-dashboard')}
                 className={cn(
-                  'text-sm font-semibold uppercase tracking-wide transition-colors flex items-center gap-1.5',
+                  'text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5',
                   currentView === 'player-dashboard' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
                 )}
               >
-                <LayoutDashboard className="w-4 h-4" /> My Dashboard
+                <LayoutDashboard className="w-3.5 h-3.5" /> My Dashboard
               </button>
             )}
 
@@ -378,11 +378,11 @@ export default function HomePage() {
               <button
                 onClick={() => setCurrentView('admin-dashboard')}
                 className={cn(
-                  'text-sm font-semibold uppercase tracking-wide transition-colors flex items-center gap-1.5',
+                  'text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5',
                   currentView === 'admin-dashboard' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
                 )}
               >
-                <LayoutDashboard className="w-4 h-4" /> Dashboard
+                <LayoutDashboard className="w-3.5 h-3.5" /> Dashboard
                 {disputedMatches.length > 0 && (
                   <span className="ml-1 text-[10px] px-1.5 py-0.2 rounded-full bg-destructive text-destructive-foreground font-bold">
                     {disputedMatches.length}
@@ -395,7 +395,7 @@ export default function HomePage() {
             <button
               onClick={() => setCurrentView('tournaments')}
               className={cn(
-                'text-sm font-semibold uppercase tracking-wide transition-colors',
+                'text-xs font-bold uppercase tracking-wider transition-colors',
                 currentView === 'tournaments' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
               )}
             >
@@ -404,7 +404,7 @@ export default function HomePage() {
             <button
               onClick={() => setCurrentView('leaderboard')}
               className={cn(
-                'text-sm font-semibold uppercase tracking-wide transition-colors',
+                'text-xs font-bold uppercase tracking-wider transition-colors',
                 currentView === 'leaderboard' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
               )}
             >
@@ -413,7 +413,7 @@ export default function HomePage() {
             <button
               onClick={() => setCurrentView('hall-of-fame')}
               className={cn(
-                'text-sm font-semibold uppercase tracking-wide transition-colors',
+                'text-xs font-bold uppercase tracking-wider transition-colors',
                 currentView === 'hall-of-fame' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
               )}
             >
@@ -422,7 +422,7 @@ export default function HomePage() {
             <button
               onClick={() => setCurrentView('head-to-head')}
               className={cn(
-                'text-sm font-semibold uppercase tracking-wide transition-colors',
+                'text-xs font-bold uppercase tracking-wider transition-colors',
                 currentView === 'head-to-head' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
               )}
             >
@@ -432,7 +432,7 @@ export default function HomePage() {
             {currentUser.role === 'ADMIN' && (
               <button
                 onClick={() => setIsCreateModalOpen(true)}
-                className="text-sm font-semibold uppercase tracking-wide text-accent hover:text-accent/80 flex items-center gap-1 ml-auto"
+                className="text-xs font-bold uppercase tracking-wider text-accent hover:text-accent/80 flex items-center gap-1 ml-auto"
               >
                 <PlusCircle className="w-3.5 h-3.5" /> New Cup
               </button>
@@ -441,20 +441,27 @@ export default function HomePage() {
 
           {/* User Status / Action Pill */}
           <div className="ml-auto flex items-center gap-3">
-            <div className="hidden text-sm font-semibold sm:block">
-              <span className="text-foreground">{currentUser.username}</span>{' '}
-              <span className="font-display text-primary">{currentUser.eloRating}</span>
-            </div>
-
-            <button
-              onClick={() => {
-                if (currentUser.role === 'ADMIN') handleRoleChange('PLAYER');
-                else handleRoleChange('ADMIN');
-              }}
-              className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-secondary"
-            >
-              {currentUser.role === 'SPECTATOR' ? 'Sign in' : 'Switch role'}
-            </button>
+            {currentUser.role === 'SPECTATOR' ? (
+              <button
+                onClick={() => handleRoleChange('PLAYER')}
+                className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-1.5 text-xs font-bold text-primary-foreground shadow hover:bg-primary/90 transition-colors"
+              >
+                Sign in
+              </button>
+            ) : (
+              <div className="flex items-center gap-3">
+                <div className="hidden text-xs font-semibold sm:block">
+                  <span className="text-foreground">{currentUser.username}</span>{' '}
+                  <span className="font-display text-primary text-sm">{currentUser.eloRating}</span>
+                </div>
+                <button
+                  onClick={() => handleRoleChange('SPECTATOR')}
+                  className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-1 text-xs font-semibold text-foreground transition-colors hover:bg-secondary"
+                >
+                  Sign out
+                </button>
+              </div>
+            )}
 
             {/* Mobile menu hamburger */}
             <button
@@ -865,9 +872,9 @@ export default function HomePage() {
             <div className="space-y-8 lg:col-span-2">
               {/* Matchday Centre */}
               <section>
-                <h2 className="font-display mb-4 flex items-center gap-2 text-2xl tracking-wide">
+                <h2 className="font-display mb-4 flex items-center gap-2 text-2xl uppercase tracking-wider">
                   <Swords className="h-5 w-5 text-primary" />
-                  Matchday centre
+                  MATCHDAY CENTRE
                 </h2>
 
                 <div className="grid gap-6 md:grid-cols-2">
@@ -962,7 +969,7 @@ export default function HomePage() {
               {/* Active Competitions */}
               <section>
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-display text-2xl tracking-wide">Active competitions</h2>
+                  <h2 className="font-display text-2xl uppercase tracking-wider">ACTIVE COMPETITIONS</h2>
                   <button
                     onClick={() => setCurrentView('tournaments')}
                     className="text-xs font-bold text-primary hover:underline uppercase tracking-wider"
@@ -1015,8 +1022,8 @@ export default function HomePage() {
 
               {/* Top of the Hostel */}
               <div className="rounded-md border border-border bg-card p-5">
-                <div className="font-display mb-3 text-xl tracking-wide flex items-center justify-between">
-                  <span>Top of the hostel</span>
+                <div className="font-display mb-3 text-xl uppercase tracking-wider flex items-center justify-between">
+                  <span>TOP OF THE HOSTEL</span>
                   <button
                     onClick={() => setCurrentView('leaderboard')}
                     className="text-xs font-sans font-semibold text-primary hover:underline"
@@ -1045,9 +1052,9 @@ export default function HomePage() {
 
               {/* Announcements Card */}
               <div className="rounded-md border border-border bg-card p-5">
-                <div className="font-display mb-3 flex items-center gap-2 text-xl tracking-wide">
+                <div className="font-display mb-3 flex items-center gap-2 text-xl uppercase tracking-wider">
                   <Megaphone className="h-4 w-4 text-primary" />
-                  Announcements
+                  ANNOUNCEMENTS
                 </div>
                 <div className="space-y-4">
                   {MOCK_ANNOUNCEMENTS.map((a) => (
@@ -1293,7 +1300,7 @@ export default function HomePage() {
       )}
 
       {/* Lovable Exact Footer */}
-      <footer className="border-t border-border py-6 text-center text-xs text-muted-foreground bg-background">
+      <footer className="py-8 text-center text-xs text-muted-foreground">
         Hostel FC Arena · One hostel. Multiple players. One champion.
       </footer>
 
