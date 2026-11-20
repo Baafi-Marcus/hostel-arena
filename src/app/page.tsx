@@ -11,13 +11,17 @@ import {
   CheckCircle2,
   AlertTriangle,
   Clock,
-  ChevronRight,
   Shield,
   PlusCircle,
   TrendingUp,
-  UserCheck,
+  LayoutDashboard,
+  Home as HomeIcon,
+  Users,
+  Check,
+  RefreshCw,
   Send,
-  ExternalLink,
+  Flag,
+  ArrowRight,
 } from 'lucide-react';
 import {
   CURRENT_USER_ADMIN,
@@ -32,7 +36,7 @@ import {
 import { Match, Tournament, User } from '@/types';
 import { cn } from '@/lib/utils';
 
-// Exact status mappings from the Lovable prototype
+// Status labels from Lovable prototype
 const STATUS_LABELS: Record<string, string> = {
   scheduled: 'Scheduled',
   awaiting_confirmation: 'Awaiting confirmation',
@@ -90,8 +94,13 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default function HomePage() {
+  // Current user role
   const [currentUser, setCurrentUser] = useState<User>(CURRENT_USER_ADMIN);
-  const [currentView, setCurrentView] = useState<'home' | 'tournaments' | 'leaderboard' | 'hall-of-fame' | 'head-to-head'>('home');
+  // Current view: Admin starts on 'admin-dashboard' (no home page), Player and Spectator get 'home'
+  const [currentView, setCurrentView] = useState<
+    'home' | 'tournaments' | 'leaderboard' | 'hall-of-fame' | 'head-to-head' | 'admin-dashboard' | 'player-dashboard'
+  >('admin-dashboard');
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Tournament and match state
@@ -126,6 +135,8 @@ export default function HomePage() {
   const upcomingMatches = matches.filter(
     (m) => m.status === 'SCHEDULED' || m.status === 'PENDING_VERIFICATION' || m.status === 'DISPUTED'
   );
+  const disputedMatches = matches.filter((m) => m.status === 'DISPUTED');
+  const pendingMatches = matches.filter((m) => m.status === 'PENDING_VERIFICATION');
 
   const handleOpenMatch = (match: Match) => {
     setActiveMatchModal(match);
@@ -144,6 +155,33 @@ export default function HomePage() {
     if (activeMatchModal?.id === matchId) {
       setActiveMatchModal((prev) => (prev ? { ...prev, status: 'COMPLETED' } : null));
     }
+  };
+
+  const handleResolveDispute = (matchId: number, resolution: 'UPHOLD' | 'RESET') => {
+    setMatches((prev) =>
+      prev.map((m) => {
+        if (m.id === matchId) {
+          if (resolution === 'UPHOLD') {
+            return {
+              ...m,
+              status: 'COMPLETED',
+              disputes: m.disputes?.map((d) => ({ ...d, status: 'RESOLVED' })),
+            };
+          } else {
+            return {
+              ...m,
+              status: 'SCHEDULED',
+              homeScore: null,
+              awayScore: null,
+              submittedHomeScore: null,
+              submittedAwayScore: null,
+              disputes: m.disputes?.map((d) => ({ ...d, status: 'DISMISSED' })),
+            };
+          }
+        }
+        return m;
+      })
+    );
   };
 
   const handleSubmitScore = (e: React.FormEvent) => {
@@ -225,53 +263,78 @@ export default function HomePage() {
     setNewTitle('');
   };
 
+  // Role switch handler
+  const handleRoleChange = (role: 'ADMIN' | 'PLAYER' | 'SPECTATOR') => {
+    if (role === 'ADMIN') {
+      setCurrentUser(CURRENT_USER_ADMIN);
+      // Admin gets Dashboard without the home page!
+      setCurrentView('admin-dashboard');
+    } else if (role === 'PLAYER') {
+      setCurrentUser(CURRENT_USER_PLAYER);
+      // Player lands on Home and gets Home button + My Dashboard
+      setCurrentView('home');
+    } else {
+      setCurrentUser(CURRENT_USER_SPECTATOR);
+      // Spectator gets Home button + public pages
+      setCurrentView('home');
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground font-sans selection:bg-primary selection:text-primary-foreground">
-      {/* Top Demo Bar: Quick Role Switcher for Pair-Programming */}
+      {/* Top Development Bar: Role Switcher */}
       <div className="bg-secondary/70 border-b border-border/80 px-4 py-1.5 text-xs flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-muted-foreground font-medium">Viewing as:</span>
+          <span className="text-muted-foreground font-medium">Testing Mode:</span>
           <span className="font-bold text-primary">{currentUser.name}</span>
           <span className="text-[11px] text-muted-foreground">({currentUser.role})</span>
+          {currentUser.role === 'ADMIN' && (
+            <span className="hidden md:inline text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-semibold ml-2">
+              Admin Mode (Direct Dashboard View)
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-1.5">
           <span className="text-[11px] text-muted-foreground mr-1 hidden sm:inline">Switch Role:</span>
           <button
-            onClick={() => setCurrentUser(CURRENT_USER_ADMIN)}
+            onClick={() => handleRoleChange('ADMIN')}
             className={cn(
               'px-2 py-0.5 rounded text-[11px] font-semibold transition',
               currentUser.role === 'ADMIN' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
             )}
           >
-            Admin
+            Admin (Dashboard)
           </button>
           <button
-            onClick={() => setCurrentUser(CURRENT_USER_PLAYER)}
+            onClick={() => handleRoleChange('PLAYER')}
             className={cn(
               'px-2 py-0.5 rounded text-[11px] font-semibold transition',
               currentUser.role === 'PLAYER' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
             )}
           >
-            Player
+            Player (Home + My Space)
           </button>
           <button
-            onClick={() => setCurrentUser(CURRENT_USER_SPECTATOR)}
+            onClick={() => handleRoleChange('SPECTATOR')}
             className={cn(
               'px-2 py-0.5 rounded text-[11px] font-semibold transition',
               currentUser.role === 'SPECTATOR' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
             )}
           >
-            Spectator
+            Spectator (Public Home)
           </button>
         </div>
       </div>
 
-      {/* Lovable Exact Header */}
+      {/* Main Header */}
       <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4">
-          {/* Logo */}
+          {/* Logo: For Admin, clicks to Admin Dashboard. For others, clicks to Home */}
           <button
-            onClick={() => setCurrentView('home')}
+            onClick={() => {
+              if (currentUser.role === 'ADMIN') setCurrentView('admin-dashboard');
+              else setCurrentView('home');
+            }}
             className="flex items-center gap-2 text-left group"
           >
             <span className="grid h-9 w-9 place-items-center rounded bg-primary text-primary-foreground shadow-sm transition group-hover:scale-105">
@@ -282,8 +345,53 @@ export default function HomePage() {
             </span>
           </button>
 
-          {/* Desktop Navigation Links */}
+          {/* Role-Specific Navigation Links */}
           <nav className="hidden flex-1 items-center gap-6 md:flex">
+            {/* Spectators & Players get the Home button */}
+            {currentUser.role !== 'ADMIN' && (
+              <button
+                onClick={() => setCurrentView('home')}
+                className={cn(
+                  'text-sm font-semibold uppercase tracking-wide transition-colors flex items-center gap-1.5',
+                  currentView === 'home' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                <HomeIcon className="w-4 h-4" /> Home
+              </button>
+            )}
+
+            {/* Players get My Dashboard */}
+            {currentUser.role === 'PLAYER' && (
+              <button
+                onClick={() => setCurrentView('player-dashboard')}
+                className={cn(
+                  'text-sm font-semibold uppercase tracking-wide transition-colors flex items-center gap-1.5',
+                  currentView === 'player-dashboard' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                <LayoutDashboard className="w-4 h-4" /> My Dashboard
+              </button>
+            )}
+
+            {/* Admin gets Admin Dashboard (without the home button) */}
+            {currentUser.role === 'ADMIN' && (
+              <button
+                onClick={() => setCurrentView('admin-dashboard')}
+                className={cn(
+                  'text-sm font-semibold uppercase tracking-wide transition-colors flex items-center gap-1.5',
+                  currentView === 'admin-dashboard' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                <LayoutDashboard className="w-4 h-4" /> Dashboard
+                {disputedMatches.length > 0 && (
+                  <span className="ml-1 text-[10px] px-1.5 py-0.2 rounded-full bg-destructive text-destructive-foreground font-bold">
+                    {disputedMatches.length}
+                  </span>
+                )}
+              </button>
+            )}
+
+            {/* Shared Links across all roles */}
             <button
               onClick={() => setCurrentView('tournaments')}
               className={cn(
@@ -324,7 +432,7 @@ export default function HomePage() {
             {currentUser.role === 'ADMIN' && (
               <button
                 onClick={() => setIsCreateModalOpen(true)}
-                className="text-sm font-semibold uppercase tracking-wide text-accent hover:text-accent/80 flex items-center gap-1"
+                className="text-sm font-semibold uppercase tracking-wide text-accent hover:text-accent/80 flex items-center gap-1 ml-auto"
               >
                 <PlusCircle className="w-3.5 h-3.5" /> New Cup
               </button>
@@ -340,12 +448,12 @@ export default function HomePage() {
 
             <button
               onClick={() => {
-                if (currentUser.role === 'ADMIN') setCurrentUser(CURRENT_USER_PLAYER);
-                else setCurrentUser(CURRENT_USER_ADMIN);
+                if (currentUser.role === 'ADMIN') handleRoleChange('PLAYER');
+                else handleRoleChange('ADMIN');
               }}
               className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-secondary"
             >
-              {currentUser.role === 'SPECTATOR' ? 'Sign in' : 'Switch account'}
+              {currentUser.role === 'SPECTATOR' ? 'Sign in' : 'Switch role'}
             </button>
 
             {/* Mobile menu hamburger */}
@@ -362,6 +470,39 @@ export default function HomePage() {
         {/* Mobile dropdown */}
         {isMobileMenuOpen && (
           <nav className="flex flex-col gap-3 border-t border-border px-4 py-4 md:hidden bg-background">
+            {currentUser.role !== 'ADMIN' && (
+              <button
+                onClick={() => {
+                  setCurrentView('home');
+                  setIsMobileMenuOpen(false);
+                }}
+                className="text-left text-sm font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground"
+              >
+                Home
+              </button>
+            )}
+            {currentUser.role === 'PLAYER' && (
+              <button
+                onClick={() => {
+                  setCurrentView('player-dashboard');
+                  setIsMobileMenuOpen(false);
+                }}
+                className="text-left text-sm font-semibold uppercase tracking-wide text-primary"
+              >
+                My Dashboard
+              </button>
+            )}
+            {currentUser.role === 'ADMIN' && (
+              <button
+                onClick={() => {
+                  setCurrentView('admin-dashboard');
+                  setIsMobileMenuOpen(false);
+                }}
+                className="text-left text-sm font-semibold uppercase tracking-wide text-primary"
+              >
+                Admin Dashboard
+              </button>
+            )}
             <button
               onClick={() => {
                 setCurrentView('tournaments');
@@ -402,8 +543,288 @@ export default function HomePage() {
         )}
       </header>
 
-      {/* VIEW: HOME (The Exact Lovable Landing Experience) */}
-      {currentView === 'home' && (
+      {/* VIEW: ADMIN DASHBOARD (Admin's primary home without marketing hero) */}
+      {currentView === 'admin-dashboard' && currentUser.role === 'ADMIN' && (
+        <div className="mx-auto max-w-7xl px-4 py-10 flex-1 w-full space-y-8">
+          {/* Admin Header */}
+          <div className="flex flex-wrap items-end justify-between gap-4 border-b border-border pb-6">
+            <div>
+              <div className="text-xs font-bold uppercase tracking-[0.2em] text-primary flex items-center gap-1.5">
+                <Shield className="w-3.5 h-3.5" /> Administration · System Operations
+              </div>
+              <h1 className="font-display text-4xl md:text-5xl tracking-wide mt-1">
+                Admin Dashboard
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Manage competitions, verify scores, resolve player disputes, and configure tournament rules.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-6 text-sm font-bold text-primary-foreground shadow-glow transition hover:bg-primary/90 gap-1.5"
+              >
+                <PlusCircle className="w-4 h-4" /> Create Tournament
+              </button>
+            </div>
+          </div>
+
+          {/* Operational Metrics Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="rounded-md border border-border bg-card p-5 space-y-1">
+              <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Active Tournaments
+              </div>
+              <div className="font-display text-3xl text-foreground">
+                {tournaments.filter((t) => t.status === 'IN_PROGRESS' || t.status === 'REGISTRATION_OPEN').length}
+              </div>
+              <div className="text-xs text-primary font-semibold">1 Live · 1 Open Registration</div>
+            </div>
+
+            <div className={cn(
+              "rounded-md border p-5 space-y-1 transition",
+              disputedMatches.length > 0 ? "border-destructive/40 bg-destructive/10" : "border-border bg-card"
+            )}>
+              <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
+                <span>Contested Disputes</span>
+                {disputedMatches.length > 0 && (
+                  <span className="w-2 h-2 rounded-full bg-destructive animate-ping" />
+                )}
+              </div>
+              <div className={cn(
+                "font-display text-3xl",
+                disputedMatches.length > 0 ? "text-destructive" : "text-foreground"
+              )}>
+                {disputedMatches.length}
+              </div>
+              <div className="text-xs text-muted-foreground">Requires admin ruling</div>
+            </div>
+
+            <div className="rounded-md border border-border bg-card p-5 space-y-1">
+              <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Registered Players
+              </div>
+              <div className="font-display text-3xl text-foreground">
+                {MOCK_LEADERBOARD_USERS.length}
+              </div>
+              <div className="text-xs text-muted-foreground">Across all hostel blocks</div>
+            </div>
+
+            <div className="rounded-md border border-border bg-card p-5 space-y-1">
+              <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Verified Matches
+              </div>
+              <div className="font-display text-3xl text-foreground">
+                {completedMatches.length}
+              </div>
+              <div className="text-xs text-muted-foreground">{pendingMatches.length} pending verification</div>
+            </div>
+          </div>
+
+          {/* Section 1: Contested Disputes Desk */}
+          <section className="space-y-4">
+            <h2 className="font-display text-2xl tracking-wide flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Contested Disputes Desk
+            </h2>
+
+            {disputedMatches.length > 0 ? (
+              <div className="space-y-3">
+                {disputedMatches.map((m) => (
+                  <div
+                    key={m.id}
+                    className="rounded-md border border-destructive/40 bg-card p-5 space-y-4"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/80 pb-3">
+                      <div>
+                        <div className="text-xs font-bold uppercase text-destructive tracking-wider">
+                          Match #{m.id} · {m.stage}
+                        </div>
+                        <div className="font-semibold text-foreground text-base">
+                          {m.homeParticipant.userName} ({m.homeParticipant.teamName}) vs{' '}
+                          {m.awayParticipant.userName} ({m.awayParticipant.teamName})
+                        </div>
+                      </div>
+                      <div className="font-display rounded bg-secondary px-3 py-1 text-lg text-primary self-start sm:self-auto">
+                        Reported: {m.homeScore} – {m.awayScore}
+                      </div>
+                    </div>
+
+                    {m.disputes && m.disputes.length > 0 && (
+                      <div className="rounded bg-destructive/10 border border-destructive/30 p-3 text-xs space-y-1">
+                        <div className="font-bold text-destructive">
+                          Contested by {m.disputes[0].raisedByUserName} ({m.disputes[0].createdAt}):
+                        </div>
+                        <p className="text-foreground italic">&quot;{m.disputes[0].reason}&quot;</p>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-end gap-2 pt-1">
+                      <button
+                        onClick={() => handleResolveDispute(m.id, 'RESET')}
+                        className="px-3 py-1.5 rounded text-xs font-semibold border border-border hover:bg-secondary text-muted-foreground"
+                      >
+                        Reset & Order Rematch
+                      </button>
+                      <button
+                        onClick={() => handleResolveDispute(m.id, 'UPHOLD')}
+                        className="px-4 py-1.5 rounded text-xs font-bold bg-primary text-primary-foreground shadow hover:bg-primary/90"
+                      >
+                        Uphold Reported Result
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-md border border-dashed border-border p-6 text-center text-muted-foreground text-sm">
+                No contested disputes right now. All match results are verified.
+              </div>
+            )}
+          </section>
+
+          {/* Section 2: Tournament Management & Progression */}
+          <section className="space-y-4">
+            <h2 className="font-display text-2xl tracking-wide flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-primary" />
+              Active Tournament Operations
+            </h2>
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {tournaments.map((t) => (
+                <div key={t.id} className="rounded-md border border-border bg-card p-5 space-y-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="font-display text-xl">{t.title}</div>
+                    <StatusBadge status={t.status} />
+                  </div>
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    <div>Format: <span className="text-foreground font-semibold">{FORMAT_LABELS[t.format] || t.format}</span></div>
+                    <div>Team Rule: <span className="text-foreground font-semibold">{t.teamSelectionRule}</span></div>
+                    <div>Participants: <span className="text-foreground font-semibold">{t.currentParticipantsCount} / {t.maxParticipants}</span></div>
+                  </div>
+                  <div className="pt-2 border-t border-border flex items-center justify-between">
+                    <button
+                      onClick={() => setCurrentView('tournaments')}
+                      className="text-xs text-primary font-bold hover:underline"
+                    >
+                      Manage Stages →
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      )}
+
+      {/* VIEW: PLAYER DASHBOARD ("My space" for player) */}
+      {currentView === 'player-dashboard' && currentUser.role === 'PLAYER' && (
+        <div className="mx-auto max-w-7xl px-4 py-10 flex-1 w-full space-y-8">
+          <div className="border-b border-border pb-6 flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <div className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
+                Player Portal · My Space
+              </div>
+              <h1 className="font-display text-4xl md:text-5xl tracking-wide mt-1">
+                My Dashboard
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Manage your club selection, report scores, and track your tournament standing.
+              </p>
+            </div>
+
+            <div className="bg-card border border-border rounded-md px-4 py-3 flex items-center gap-4">
+              <div>
+                <div className="text-xs text-muted-foreground">My Club</div>
+                <div className="font-bold text-foreground">Arsenal</div>
+              </div>
+              <div className="h-8 w-px bg-border" />
+              <div>
+                <div className="text-xs text-muted-foreground">Hostel Room</div>
+                <div className="font-bold text-foreground">{currentUser.hostelBlock} • {currentUser.roomNumber}</div>
+              </div>
+              <div className="h-8 w-px bg-border" />
+              <div>
+                <div className="text-xs text-muted-foreground">ELO Rating</div>
+                <div className="font-display text-xl text-primary">{currentUser.eloRating}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Required: Pending Verification */}
+          {pendingMatches.length > 0 && (
+            <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-5 space-y-3">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-400">
+                <Clock className="w-4 h-4" /> Action Required: Opponent Score Submitted
+              </div>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <div className="font-semibold text-foreground text-sm">
+                    {pendingMatches[0].homeParticipant.userName} ({pendingMatches[0].homeParticipant.teamName}) vs{' '}
+                    {pendingMatches[0].awayParticipant.userName} ({pendingMatches[0].awayParticipant.teamName})
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    Reported Score: <span className="font-bold text-foreground">{pendingMatches[0].homeScore} – {pendingMatches[0].awayScore}</span> ({pendingMatches[0].notes || 'Regular time'})
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleOpenMatch(pendingMatches[0])}
+                    className="px-3 py-1.5 rounded text-xs font-semibold border border-destructive/40 text-destructive hover:bg-destructive/10"
+                  >
+                    Contest / Dispute
+                  </button>
+                  <button
+                    onClick={() => handleConfirmResult(pendingMatches[0].id)}
+                    className="px-4 py-1.5 rounded text-xs font-bold bg-primary text-primary-foreground shadow hover:bg-primary/90"
+                  >
+                    Confirm Result
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* My Next Matches & Submission */}
+          <section className="space-y-4">
+            <h2 className="font-display text-2xl tracking-wide flex items-center gap-2">
+              <Swords className="h-5 w-5 text-primary" />
+              My Upcoming Fixtures
+            </h2>
+
+            <div className="space-y-3">
+              {upcomingMatches.map((m) => (
+                <div
+                  key={m.id}
+                  onClick={() => handleOpenMatch(m)}
+                  className="cursor-pointer grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-md border border-border bg-card px-4 py-3.5 transition hover:border-primary/50"
+                >
+                  <div className="truncate text-right">
+                    <div className="font-semibold text-sm">{m.homeParticipant.userName}</div>
+                    <div className="text-xs text-muted-foreground">{m.homeParticipant.teamName}</div>
+                  </div>
+
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="font-display min-w-16 rounded bg-secondary px-3 py-1 text-center text-lg text-primary">
+                      {m.homeScore !== null ? `${m.homeScore} – ${m.awayScore}` : 'vs'}
+                    </div>
+                    <StatusBadge status={m.status} />
+                  </div>
+
+                  <div className="truncate">
+                    <div className="font-semibold text-sm">{m.awayParticipant.userName}</div>
+                    <div className="text-xs text-muted-foreground">{m.awayParticipant.teamName}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      )}
+
+      {/* VIEW: HOME (For Spectators and Players) */}
+      {currentView === 'home' && currentUser.role !== 'ADMIN' && (
         <div className="flex-1">
           {/* Lovable Hero Section */}
           <section className="bg-pitch relative overflow-hidden border-b border-border">
@@ -438,7 +859,7 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* Lovable Main Content Grid: 2 cols left, 1 col right */}
+          {/* Lovable Main Content Grid */}
           <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 lg:grid-cols-3">
             {/* Left 2 Columns */}
             <div className="space-y-8 lg:col-span-2">
@@ -592,7 +1013,7 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Top of the Hostel (Leaderboard summary) */}
+              {/* Top of the Hostel */}
               <div className="rounded-md border border-border bg-card p-5">
                 <div className="font-display mb-3 text-xl tracking-wide flex items-center justify-between">
                   <span>Top of the hostel</span>
