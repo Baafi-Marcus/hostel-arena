@@ -1,0 +1,146 @@
+// use prisma-8
+
+model User {
+  id                 Int                     @id @default(autoincrement())
+  email              String                  @unique
+  username           String                  @unique
+  name               String
+  role               String                  @default("PLAYER")
+  avatarUrl          String?
+  bio                String?
+  roomNumber         String?
+  hostelBlock        String?
+  eloRating          Int                     @default(1200)
+  tournamentsCreated Tournament[]           @relation("AdminTournaments")
+  participations     TournamentParticipant[]
+  matchesReported    Match[]                 @relation("ReportedMatches")
+  disputesRaised     MatchDispute[]         @relation("DisputesRaised")
+  notifications      Notification[]
+  createdAt          DateTime                @default(now()) @onCreate(now())
+  updatedAt          temporal.UpdatedAt
+}
+
+model Tournament {
+  id                Int                     @id @default(autoincrement())
+  title             String
+  slug              String                  @unique
+  description       String?
+  format            String                  @default("GROUP_TO_KNOCKOUT")
+  status            String                  @default("DRAFT")
+  teamSelectionRule String                  @default("EXCLUSIVE")
+  maxParticipants   Int                     @default(16)
+  minParticipants   Int                     @default(4)
+  entryFee          String?
+  prizePool         String?
+  rules             String?
+  bannerUrl         String?
+  startDate         DateTime?
+  endDate           DateTime?
+  adminId           Int
+  admin             User                    @relation("AdminTournaments", fields: [adminId], references: [id])
+  participants      TournamentParticipant[]
+  matches           Match[]
+  standings         Standing[]
+  announcements     Announcement[]
+  createdAt         DateTime                @default(now()) @onCreate(now())
+  updatedAt         temporal.UpdatedAt
+}
+
+model TournamentParticipant {
+  id           Int        @id @default(autoincrement())
+  tournamentId Int
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+  userId       Int
+  user         User       @relation(fields: [userId], references: [id])
+  teamName     String?
+  teamBadgeUrl String?
+  groupName    String?
+  seed         Int?
+  status       String     @default("CONFIRMED")
+  homeMatches  Match[]    @relation("HomeParticipant")
+  awayMatches  Match[]    @relation("AwayParticipant")
+  standings    Standing[]
+  createdAt    DateTime   @default(now()) @onCreate(now())
+  updatedAt    temporal.UpdatedAt
+}
+
+model Match {
+  id                 Int                   @id @default(autoincrement())
+  tournamentId       Int
+  tournament         Tournament            @relation(fields: [tournamentId], references: [id])
+  stage              String
+  round              Int                   @default(1)
+  matchNumber        Int?
+  groupName          String?
+  homeParticipantId  Int
+  homeParticipant    TournamentParticipant @relation("HomeParticipant", fields: [homeParticipantId], references: [id])
+  awayParticipantId  Int
+  awayParticipant    TournamentParticipant @relation("AwayParticipant", fields: [awayParticipantId], references: [id])
+  homeScore          Int?
+  awayScore          Int?
+  status             String                @default("SCHEDULED")
+  submittedById      Int?
+  submittedBy        User?                 @relation("ReportedMatches", fields: [submittedById], references: [id])
+  submittedHomeScore Int?
+  submittedAwayScore Int?
+  proofScreenshotUrl String?
+  notes              String?
+  scheduledTime      DateTime?
+  playedAt           DateTime?
+  disputes           MatchDispute[]
+  createdAt          DateTime              @default(now()) @onCreate(now())
+  updatedAt          temporal.UpdatedAt
+}
+
+model MatchDispute {
+  id         Int       @id @default(autoincrement())
+  matchId    Int
+  match      Match     @relation(fields: [matchId], references: [id])
+  raisedById Int
+  raisedBy   User      @relation("DisputesRaised", fields: [raisedById], references: [id])
+  reason     String
+  status     String    @default("OPEN")
+  adminNotes String?
+  resolvedAt DateTime?
+  createdAt  DateTime  @default(now()) @onCreate(now())
+  updatedAt  temporal.UpdatedAt
+}
+
+model Standing {
+  id             Int                   @id @default(autoincrement())
+  tournamentId   Int
+  tournament     Tournament            @relation(fields: [tournamentId], references: [id])
+  participantId  Int
+  participant    TournamentParticipant @relation(fields: [participantId], references: [id])
+  groupName      String?
+  played         Int                   @default(0)
+  won            Int                   @default(0)
+  drawn          Int                   @default(0)
+  lost           Int                   @default(0)
+  goalsFor       Int                   @default(0)
+  goalsAgainst   Int                   @default(0)
+  goalDifference Int                   @default(0)
+  points         Int                   @default(0)
+  updatedAt      temporal.UpdatedAt
+}
+
+model Announcement {
+  id           Int        @id @default(autoincrement())
+  tournamentId Int
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+  title        String
+  content      String
+  createdAt    DateTime   @default(now()) @onCreate(now())
+  updatedAt    temporal.UpdatedAt
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  message   String
+  linkUrl   String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now()) @onCreate(now())
+}
