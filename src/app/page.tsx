@@ -218,7 +218,9 @@ export default function HomePage() {
       const res = await fetch('/api/users');
       const data = await res.json();
       if (res.ok && Array.isArray(data.users)) {
-        const enriched = data.users.map((u: any) => ({
+        // Exclude administrators so only registered player competitors appear in rankings & leaderboard
+        const competitorsOnly = data.users.filter((u: any) => u.role !== 'ADMIN');
+        const enriched = competitorsOnly.map((u: any) => ({
           ...u,
           stats: u.stats || {
             matchesPlayed: Math.max(1, Math.floor(((u.eloRating || 1200) - 1000) / 30)),
@@ -2355,13 +2357,16 @@ export default function HomePage() {
                     Full table
                   </button>
                 </div>
-                {usersList.length === 0 ? (
+                {usersList.filter((u) => u.role !== 'ADMIN').length === 0 ? (
                   <p className="text-xs text-muted-foreground text-center py-4">
                     No competitors registered yet. Be the first to join!
                   </p>
                 ) : (
                   <ol className="space-y-2.5">
-                    {usersList.slice(0, 5).map((user, idx) => (
+                    {usersList
+                      .filter((u) => u.role !== 'ADMIN')
+                      .slice(0, 5)
+                      .map((user, idx) => (
                       <li key={user.id} className="flex items-center justify-between text-sm">
                         <div className="flex items-center gap-3">
                           <span className="font-bold text-muted-foreground w-4 text-right">
@@ -2824,6 +2829,7 @@ export default function HomePage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {[...usersList]
+                  .filter((u) => u.role !== 'ADMIN')
                   .sort((a, b) => b.eloRating - a.eloRating)
                   .map((user, idx) => {
                     const rate = user.stats && user.stats.matchesPlayed > 0
@@ -2993,7 +2999,7 @@ export default function HomePage() {
                 </thead>
                 <tbody className="divide-y divide-border">
                   {[...usersList]
-                    .filter((u) => u.stats)
+                    .filter((u) => u.role !== 'ADMIN' && u.stats)
                     .sort((a, b) => (b.stats?.goalsScored ?? 0) - (a.stats?.goalsScored ?? 0))
                     .map((u, idx) => (
                       <tr key={u.id} className="hover:bg-secondary/30 transition-colors">

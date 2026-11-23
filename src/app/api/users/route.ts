@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/prisma/db';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const users = await db.orm.public.User.all();
+    const { searchParams } = new URL(request.url);
+    const includeAdmin = searchParams.get('includeAdmin') === 'true';
+    const allUsers = await db.orm.public.User.all();
+    const users = includeAdmin ? allUsers : allUsers.filter((u) => u.role !== 'ADMIN');
     return NextResponse.json({ users });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
