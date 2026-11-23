@@ -10,6 +10,7 @@ export interface User {
   bio?: string;
   roomNumber?: string;
   hostelBlock?: string;
+  hostelName?: string;
   eloRating: number;
   stats?: {
     matchesPlayed: number;
@@ -49,7 +50,10 @@ export interface Tournament {
   status: TournamentStatus;
   teamSelectionRule: TeamSelectionRule;
   maxParticipants: number;
-  currentParticipantsCount: number;
+  currentParticipantsCount?: number;
+  approvedParticipantsCount?: number;
+  participantsCount?: number;
+  pendingParticipantsCount?: number;
   entryFee?: string;
   prizePool?: string;
   rules?: string;
@@ -57,8 +61,18 @@ export interface Tournament {
   startDate?: string;
   endDate?: string;
   adminId: number;
-  adminName: string;
+  adminName?: string;
 }
+
+export type ParticipantStatus =
+  | 'PENDING_APPROVAL'
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'CONFIRMED'
+  | 'REGISTERED'
+  | 'ELIMINATED'
+  | 'DISQUALIFIED'
+  | 'WINNER';
 
 export interface TournamentParticipant {
   id: number;
@@ -71,7 +85,7 @@ export interface TournamentParticipant {
   teamBadgeUrl?: string;
   groupName?: string;  // e.g. "Group A"
   seed?: number;
-  status: 'REGISTERED' | 'CONFIRMED' | 'ELIMINATED' | 'DISQUALIFIED' | 'WINNER';
+  status: ParticipantStatus;
 }
 
 export type MatchStatus =

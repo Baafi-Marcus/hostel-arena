@@ -3,13 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "next dev --webpack",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "contract:emit": "prisma contract emit"
   },
   "dependencies": {
+    "@neon/config": "^1.14.5",
+    "@neon/env": "^2.1.8",
     "@prisma/client": "^7.10.1",
     "@prisma/orm-postgres": "^8.0.0-rc.24",
     "clsx": "^2.1.1",
@@ -21,6 +23,7 @@
     "tailwind-merge": "^3.7.1"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.5",
     "@tailwindcss/turbopack": "4.3.3",
     "@types/node": "^20",
     "@types/react": "^19",
