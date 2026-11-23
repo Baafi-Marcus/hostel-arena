@@ -2105,19 +2105,35 @@ export default function HomePage() {
         <div className="flex-1">
           {/* Lovable Hero Section */}
           <section className="bg-pitch relative overflow-hidden border-b border-border">
-            <div className="mx-auto max-w-7xl px-4 py-16 md:py-24 flex flex-col md:flex-row items-center justify-between gap-8">
-              <div className="flex-1">
-                <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-primary mb-2">
-                  <img src="/FC-26-Logo-Football-Video-game-8432.png" alt="FC 26" className="h-3.5 w-auto" />
-                  <span>Hostel League Arena</span>
+            <div className="mx-auto max-w-7xl px-4 py-12 md:py-24 flex flex-col md:flex-row items-center md:items-start justify-between gap-8">
+              <div className="flex-1 w-full">
+                {/* On mobile: Headline & Trophy side by side */}
+                <div className="flex items-center justify-between gap-3 sm:gap-6">
+                  <div className="flex-1 min-w-0">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-primary mb-2">
+                      <img src="/FC-26-Logo-Football-Video-game-8432.png" alt="FC 26" className="h-3.5 w-auto" />
+                      <span>Hostel League Arena</span>
+                    </div>
+                    <h1 className="font-display mt-2 sm:mt-4 max-w-4xl text-4xl sm:text-7xl md:text-8xl leading-[0.95]">
+                      One hostel.
+                      <br />
+                      Many players.
+                      <br />
+                      <span className="text-primary">One champion.</span>
+                    </h1>
+                  </div>
+
+                  {/* Trophy next to hero text on mobile */}
+                  <div className="md:hidden relative shrink-0 flex items-center justify-center w-28 h-32 sm:w-44 sm:h-48">
+                    <div className="absolute inset-0 rounded-full bg-primary/15 blur-xl" />
+                    <img
+                      src="/UEFA-Champions-League-Trophy-Cup-44187.png"
+                      alt="Champions Trophy"
+                      className="relative z-10 max-h-32 sm:max-h-48 w-auto object-contain filter drop-shadow-[0_12px_24px_rgba(0,0,0,0.85)] animate-pulse"
+                    />
+                  </div>
                 </div>
-                <h1 className="font-display mt-4 max-w-4xl text-5xl leading-[0.95] sm:text-7xl md:text-8xl">
-                  One hostel.
-                  <br />
-                  Many players.
-                  <br />
-                  <span className="text-primary">One champion.</span>
-                </h1>
+
                 <p className="mt-5 max-w-xl text-base sm:text-lg text-muted-foreground leading-relaxed">
                   Join tournaments, pick your club, report results and settle once and for all who runs the hostel.
                 </p>
@@ -2148,7 +2164,7 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Hero Trophy Showcase Graphic */}
+              {/* Hero Trophy Showcase Graphic (Desktop md and up) */}
               <div className="hidden md:flex relative shrink-0 items-center justify-center w-72 h-72 lg:w-84 lg:h-84">
                 <div className="absolute inset-0 rounded-full bg-primary/10 blur-3xl" />
                 <img
